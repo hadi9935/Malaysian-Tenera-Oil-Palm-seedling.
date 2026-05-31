@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agro-Tech Derivative Tool: Oil Palm Growth</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f7f6;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 10px; }
+        .formula-box {
+            background: #e8f5e9;
+            padding: 15px;
+            border-left: 5px solid #2e7d32;
+            margin: 20px 0;
+        }
+        #info-panel {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px dashed #2e7d32;
+            border-radius: 8px;
+            min-height: 100px;
+            background: #fff;
+        }
+        .data-source {
+            font-size: 0.8rem;
+            color: #666;
+            margin-top: 10px;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        .highlight { color: #d32f2f; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Oil Palm Seedling Growth Velocity</h1>
+    <p><strong>Scenario:</strong> Monitoring the growth of a <em>Tenera</em> oil palm seedling over a 24-month period to optimize transplanting schedules. We use a polynomial regression model to approximate height growth.</p>
+
+    <div class="formula-box">
+        <h3>Mathematical Model</h3>
+        <p>Height Function: \( f(x) = 0.08x^2 + 1.5x + 10 \)</p>
+        <p>Growth Rate (Derivative): \( f'(x) = 0.16x + 1.5 \)</p>
+        <small>Where \( x \) = Age in months, \( f(x) \) = Height in cm.</small>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="growthChart"></canvas>
+    </div>
+
+    <div id="info-panel">
+        <strong>Instruction:</strong> Click any point on the graph line to calculate the growth rate at that specific month.
+    </div>
+
+    <p class="data-source">
+        Data points inspired by: <em>MPOB (Malaysian Palm Oil Board) Nursery Management Guidelines and Agronomy Research.</em>
+    </p>
+</div>
+
+<script>
+    const ctx = document.getElementById('growthChart').getContext('2d');
+    
+    // Generate data points for 24 months
+    const labels = Array.from({length: 25}, (_, i) => i);
+    const heightData = labels.map(x => (0.08 * Math.pow(x, 2) + 1.5 * x + 10).toFixed(2));
+
+    const growthChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Seedling Height (cm)',
+                data: heightData,
+                borderColor: '#2e7d32',
+                backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 5,
+                pointHoverRadius: 8
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { enabled: false } // Custom click logic instead
+            },
+            scales: {
+                x: { title: { display: true, text: 'Time (Months)' } },
+                y: { title: { display: true, text: 'Height (cm)' }, beginAtZero: true }
+            },
+            onClick: (e, elements) => {
+                if (elements.length > 0) {
+                    const index = elements[0].index;
+                    const x = labels[index];
+                    const height = heightData[index];
+                    
+                    // Calculate Derivative f'(x) = 0.16x + 1.5
+                    const rate = (0.16 * x + 1.5).toFixed(2);
+
+                    displayAnalysis(x, height, rate);
+                }
+            }
+        }
+    });
+
+    function displayAnalysis(month, height, rate) {
+        const panel = document.getElementById('info-panel');
+        let explanation = "";
+
+        if (rate < 2.5) {
+            explanation = "The seedling is in its early establishment phase. Growth is steady but slow.";
+        } else if (rate >= 2.5 && rate < 4.5) {
+            explanation = "The plant is in a 'vigorous growth' phase. It is efficiently converting nutrients into biomass.";
+        } else {
+            explanation = "Maximum growth velocity! The seedling is nearing readiness for estate transplanting.";
+        }
+
+        panel.innerHTML = `
+            <h3>Analysis at Month ${month}</h3>
+            <p><strong>Current Height:</strong> ${height} cm</p>
+            <p><strong>Growth Rate (\(f'(x)\)):</strong> <span class="highlight">${rate} cm/month</span></p>
+            <p><strong>Layman's Terms:</strong> At exactly this moment, your palm is growing at a speed of ${rate} centimeters per month. ${explanation}</p>
+        `;
+        // Re-trigger MathJax to render the LaTeX in the new HTML
+        MathJax.typeset();
+    }
+</script>
+
+</body>
+</html>
